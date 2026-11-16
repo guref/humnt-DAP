@@ -1383,12 +1383,11 @@ def admin_panel():
         # =========================================================================
         # NUEVO: Cargamos las solicitudes de recuperación desde su archivo aislado
         # =========================================================================
-        solicitudes_recuperacion = cargar_solicitudes_recuperacion()
+        
     return render_template('admin_panel.html', 
                            users=users_db, 
                            logs=logs, 
                            solicitudes=cargar_solicitudes()[::-1],
-                           solicitudes_recuperacion=solicitudes_recuperacion[::-1],
                            master_columns=master_columns,
                            search_cedula=search_cedula,
                            master_data_row=master_data_row,
