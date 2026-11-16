@@ -1,0 +1,27 @@
+// Despues de instalar python en el equipo, correr este comando en la terminal para instalar los paquetes de manera offline//
++++instalar dependencias ya descargadas+++
+python -m pip install --no-index --find-links="C:\Users\usuario\Documents\Proyecto Archivos\paquetes_offline_32bits" flask pandas openpyxl reportlab
+especificando la ruta donde esta alojado el proyecto
++++descargar dependencias si no estan descargadas+++
+python -m pip download flask pandas openpyxl -d ./paquetes_offline_32bits
+
+//Dependencias del Proyecto//
+Flask: Framework web minimalista y ligero para Python. Se encarga de levantar el servidor HTTP local, gestionar las rutas de la aplicación, controlar las sesiones de usuario y renderizar las plantillas HTML (con Jinja2) para el panel de gestión.   
+Pandas: Librería de alto rendimiento especializada en la manipulación y análisis de estructuras de datos. Permite leer eficientemente los archivos Excel institucionales (.xlsx), filtrar información, procesar filas y columnas, y estructurar los datos dinámicamente para mostrarlos en el sistema.   
+Openpyxl: Motor secundario de lectura y escritura de hojas de cálculo. Actúa como el controlador subyacente que le otorga a Pandas la compatibilidad nativa para procesar archivos con formato .xlsx sin requerir dependencias de Microsoft Office instaladas en el equipo.
+
+//CSS puro (Vanilla CSS)//
+Paleta Institucional:
+
+Azul Institucional (#1b365d): Utilizado en la barra superior estandarizada, botones de búsqueda y elementos principales.
+
+Blanco (#ffffff): Fondo de cabecera limpio para evitar pérdida de contraste con los logotipos incrustados como imágenes.
+
+Compatibilidad Visual: Clases personalizadas diseñadas para renderizarse de forma fluida y ligera, garantizando un rendimiento óptimo en navegadores y hardware antiguo (como los equipos con 2GB de RAM).
+
+Estructura Modular: Estilos limpios adaptados para el nuevo menú de navegación lateral (slide-out / cajón deslizable) y la correcta alineación de los campos de búsqueda y tablas provenientes de .xlsx
+
+//para los archivos pdf//
+ReportLab: Librería especializada en la generación dinámica de documentos PDF a través de código Python. 
+Actúa como el motor de reportes del sistema, permitiendo estructurar plantillas de impresión, definir márgenes, orientaciones de página (como horizontal o vertical)
+y compilar los datos procesados del Excel en informes formales listos para exportar de manera completamente local y offline.

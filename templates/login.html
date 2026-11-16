@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel de Control - Gestión Excel</title>
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body, html {
+            height: 100%;
+            font-family: Arial, sans-serif;
+            background-color: #1b365d;
+        }
+        .login-body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Contenedor principal del login centrado */
+        .login-container {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .login-card {
+            background-color: #ffffff;
+            border: 1px solid #b0c4de;
+            padding: 30px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .login-card h5 {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #1a202c;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        .form-control {
+            width: 100%;
+            padding: 8px;
+            font-size: 18px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .btn-entrar {
+            width: 100%;
+            padding: 10px;
+            background-color: #2b4c7e;
+            color: white;
+            border: 1px solid #1f385c;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .btn-entrar:hover {
+            background-color: #1f385c;
+        }
+    </style>
+</head>
+<body class="login-body">
+
+    <!-- 1. CABECERA INSTITUCIONAL UNIFICADA CON ESTILOS EN LÍNEA -->
+    <header style="background: #ffffff !important; border-bottom: 2px solid #b0c4de !important; display: flex !important; justify-content: space-between !important; align-items: center !important; padding: 8px 25px !important; height: 70px !important; box-sizing: border-box !important; width: 100% !important; margin: 0 !important;">
+        <img src="{{ url_for('static', filename='logo_salud.png') }}" style="height: 45px !important; max-height: 45px !important; width: auto !important; object-fit: contain !important;" onerror="this.src='{{ url_for('static', filename='img/logo_salud.png') }}'">
+        <div style="text-align: center;">
+            <div style="font-family: Arial, sans-serif !important; font-size: 18px !important; line-height: 1.3 !important; color: #1b365d !important; font-weight: bold !important;">REPÚBLICA BOLIVARIANA DE VENEZUELA</div>
+            <div style="font-family: Arial, sans-serif !important; font-size: 18px !important; line-height: 1.3 !important; color: #1b365d !important; font-weight: bold !important;">MINISTERIO DEL PODER POPULAR PARA LA SALUD</div>
+        </div>
+        <img src="{{ url_for('static', filename='logo_humnt.png') }}" style="height: 45px !important; max-height: 45px !important; width: auto !important; object-fit: contain !important;" onerror="this.src='{{ url_for('static', filename='img/logo_humnt.png') }}'">
+    </header>
+
+    <div class="login-container">
+        <div class="login-card">
+            <h5>Acceso al Sistema</h5>
+            <form method="POST">
+                <div class="form-group">
+                    <label>Usuario</label>
+                    <input type="text" name="username" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <input type="password" name="password" class="form-control" required>
+                </div>
+                <button type="submit" class="btn-entrar">Entrar</button>
+            </form>
+            <!-- Enlace y cuadro desplegable para recuperar contraseña -->
+        <div class="mt-2 text-end">
+            <a href="javascript:void(0);" onclick="toggleRecuperacion()" style="font-size: 18px; text-decoration: none; color: #1b365d; font-weight: 600;">¿Olvido su contraseña?</a>
+        </div>
+
+        <div id="box-recuperacion" style="display: none; margin-top: 12px; padding: 10px; background: #f8f9fa; border: 1px solid #dcdcdc; border-radius: 6px;">
+            <form action="{{ url_for('solicitar_recuperacion') }}" method="POST">
+                <label style="font-size: 18px; font-weight: bold; color: #333; margin-bottom: 4px; display: block;">Ingrese su Usuario</label>
+                <div class="input-group mb-2">
+                    <input type="text" name="usuario_recuperacion" class="form-control form-control-sm" placeholder="Nombre de usuario" required>
+                </div>
+                <button type="submit" class="btn btn-warning btn-sm w-100 fw-bold" style="font-size: 18px;">Enviar Solicitud</button>
+            </form>
+        </div>
+
+<script>
+function toggleRecuperacion() {
+    var box = document.getElementById('box-recuperacion');
+    box.style.display = (box.style.display === 'none' || box.style.display === '') ? 'block' : 'none';
+}
+</script>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+</body>
+</html>

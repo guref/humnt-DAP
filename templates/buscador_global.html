@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Buscador Global de Cédulas - HUMNT</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+    <style>
+    /* Estilos corporativos limpios y sin amontonamiento para la tabla del Buscador Global */
+    .table-responsive {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+    }
+    .table-responsive::-webkit-scrollbar { height: 8px; }
+    .table-responsive::-webkit-scrollbar-thumb { background-color: #1b365d; border-radius: 4px; }
+    .table-responsive::-webkit-scrollbar-track { background-color: #e9ecef; }
+
+    .table {
+        width: 100%;
+        min-width: max-content;
+        border-collapse: collapse;
+        font-size: 12px;
+        font-family: Arial, sans-serif;
+        margin-bottom: 0;
+    }
+    .table th {
+        background-color: #1b365d;
+        color: #ffffff;
+        white-space: nowrap; /* Impide que el texto de la cabecera se rompa */
+        padding: 10px 14px;
+        border: 1px solid #dee2e6;
+        text-align: center;
+        vertical-align: middle;
+        font-size: 12px;
+    }
+    .table td {
+        white-space: nowrap; /* Mantiene cada celda alineada sin deformarse */
+        padding: 8px 12px;
+        border: 1px solid #dee2e6;
+        text-align: center;
+        vertical-align: middle;
+        color: #333;
+        background-color: #fff;
+    }
+    .table tbody tr:nth-of-type(odd) td {
+        background-color: #f8f9fa;
+    }
+</style>
+</head>
+<body>
+    <!-- 1. CABECERA INSTITUCIONAL UNIFICADA CON ESTILOS EN LÍNEA -->
+    <header style="background: #ffffff !important; border-bottom: 2px solid #b0c4de !important; display: flex !important; justify-content: space-between !important; align-items: center !important; padding: 8px 25px !important; height: 70px !important; box-sizing: border-box !important; width: 100% !important; margin: 0 !important;">
+        <img src="{{ url_for('static', filename='logo_salud.png') }}" style="height: 45px !important; max-height: 45px !important; width: auto !important; object-fit: contain !important;" onerror="this.src='{{ url_for('static', filename='img/logo_salud.png') }}'">
+        <div style="text-align: center;">
+            <div style="font-family: Arial, sans-serif !important; font-size: 13px !important; line-height: 1.3 !important; color: #1b365d !important; font-weight: bold !important;">REPÚBLICA BOLIVARIANA DE VENEZUELA</div>
+            <div style="font-family: Arial, sans-serif !important; font-size: 13px !important; line-height: 1.3 !important; color: #1b365d !important; font-weight: bold !important;">MINISTERIO DEL PODER POPULAR PARA LA SALUD</div>
+        </div>
+        <img src="{{ url_for('static', filename='logo_humnt.png') }}" style="height: 45px !important; max-height: 45px !important; width: auto !important; object-fit: contain !important;" onerror="this.src='{{ url_for('static', filename='img/logo_humnt.png') }}'">
+    </header>
+
+    <!-- 2. BARRA DE NAVEGACIÓN UNIFICADA -->
+    <nav style="background-color: #1b365d !important; color: #ffffff !important; display: flex !important; justify-content: space-between !important; align-items: center !important; padding: 10px 25px !important; height: 45px !important; box-sizing: border-box !important; width: 100% !important;">
+        <span style="font-weight: bold; font-size: 14px; font-family: Arial, sans-serif !important; color: #ffffff;">Módulo: Buscador Global de Cédulas (Carpeta Data)</span>
+        <div>
+            <a href="{{ url_for('dashboard') }}" class="text-white text-decoration-none fw-bold me-3">← Volver al Panel Principal</a>
+            <a href="{{ url_for('logout') }}" class="text-white text-decoration-none fw-bold">Cerrar Sesión</a>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <form method="GET" action="{{ url_for('buscador_global') }}" id="formBuscador">
+            
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white fw-bold">1. Parámetros de Búsqueda Masiva por Cédula o Columnas</div>
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-9">
+                            <input type="text" name="search_cedula" class="form-control" placeholder="Ingrese número de cédula (opcional, si se deja vacío traerá todos los registros de las columnas marcadas)..." value="{{ cedula_consultada }}">
+                        </div>
+                        <div class="col-md-3">
+                            <button type="submit" class="btn btn-success w-100 fw-bold">🔍 Ejecutar Búsqueda</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                    <span>2. Seleccionar Columnas a Mostrar y Filtros Específicos</span>
+                    <div>
+                        <button type="button" class="btn btn-outline-light btn-sm py-0 me-2" style="font-size: 11px;" onclick="marcarTodas(true)">Marcar Todas</button>
+                        <button type="button" class="btn btn-outline-light btn-sm py-0" style="font-size: 11px;" onclick="marcarTodas(false)">Desmarcar Todas</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if todas_las_columnas %}
+                        <div class="row">
+                            {% for col in todas_las_columnas %}
+                                {% if col != 'Nº' and col != 'N°' %}
+                                <div class="col-md-3 mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input chk-col" type="checkbox" name="cols" value="{{ col }}" id="col_{{ loop.index }}"
+                                            {% if col in columnas_seleccionadas or not columnas_seleccionadas %}checked{% endif %}>
+                                        <label class="form-check-label text-dark {% if col == 'CÉDULA' %}fw-bold{% endif %}" for="col_{{ loop.index }}" style="font-size: 12px;">
+                                            {{ col }}
+                                        </label>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+
+                        {% if ubicaciones_especificas %}
+                        <div class="mt-4 pt-3 border-top">
+                            <label class="form-label fw-bold text-secondary mb-2" style="font-size: 12px;">📍 Filtrar por Ubicaciones Específicas (Opcional - Si no marca ninguna, se incluyen todas):</label>
+                            <div class="row bg-light p-3 rounded border">
+                                {% for ub in ubicaciones_especificas %}
+                                <div class="col-md-4 mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="ubicaciones_esp" value="{{ ub }}" id="ub_{{ loop.index }}"
+                                            {% if ubicaciones_seleccionadas and ub in ubicaciones_seleccionadas %}checked{% endif %}>
+                                        <label class="form-check-label text-dark" for="ub_{{ loop.index }}" style="font-size: 11px;">
+                                            {{ ub }}
+                                        </label>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                    {% else %}
+                        <p class="text-muted small">No hay columnas de datos válidas registradas todavía en la carpeta data.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center flex-wrap gap-2" style="background-color: #1b365d !important;">
+                    <span>Resultados Globales / Cédula Consultada: <strong>{{ cedula_consultada if cedula_consultada else 'Búsqueda Masiva General' }}</strong></span>
+                    
+                    <!-- BOTONES DE EXPORTACIÓN EXCEL Y PDF -->
+<div class="d-flex gap-2">
+    <!-- Botón Excel como Enlace Directo GET (Descarga inmediata sin bloqueos) -->
+    <a href="{{ url_for('exportar_excel_personalizado', cedula=cedula_consultada, cols=columnas_seleccionadas, ubicaciones_esp=ubicaciones_seleccionadas) }}" 
+       class="btn btn-success btn-sm fw-bold text-decoration-none" 
+       style="font-size: 11px; padding: 5px 12px; background-color: #2f6f4e; border: none; color: white;">
+        📊 Guardar/Descargar Excel (.xlsx)
+    </a>
+
+    <!-- Botón PDF Personalizado (Filtrado igual que el Excel) -->
+<a href="{{ url_for('exportar_pdf_personalizado', cedula=cedula_consultada, cols=columnas_seleccionadas, ubicaciones_esp=ubicaciones_seleccionadas) }}" 
+   class="btn btn-danger btn-sm fw-bold text-decoration-none" 
+   style="font-size: 11px; padding: 5px 12px; background-color: #c0392b; border: none; color: white;">
+    📄 Guardar/Descargar PDF (.pdf)
+</a>
+</div>
+                </div>
+                
+                <div class="card-body">
+                    {% if resultados_bloques %}
+                        {% for bloque in resultados_bloques %}
+                            <!-- Etiqueta distintiva del archivo origen -->
+                            <div class="alert alert-secondary py-2 px-3 mb-2 fw-bold" style="font-size: 12px; background-color: #e9ecef; color: #1b365d; border-left: 4px solid #1b365d;">
+                                📁 <strong>Origen:</strong> {{ bloque.origen }} (Mostrando registros del bloque)
+                            </div>
+
+                            <div class="table-responsive mb-4">
+                                <table class="table table-bordered table-striped table-sm text-center">
+                                    <thead class="table-dark" style="background-color: #1b365d; color: white;">
+                                        <tr>
+                                            {% for col in bloque.columnas %}
+                                                <th>{{ col }}</th>
+                                            {% endfor %}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for fila in bloque.filas %}
+                                            <tr>
+                                                {% for col in bloque.columnas %}
+                                                    <td>{{ fila.get(col, 'Sin registro') }}</td>
+                                                {% endfor %}
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% endfor %}
+
+                        <!-- CONTROLES DE PAGINACIÓN (20 RESULTADOS POR PÁGINA) -->
+                        {% if total_paginas > 1 %}
+                        <nav aria-label="Navegación de resultados" class="mt-3 mb-2">
+                            <ul class="pagination pagination-sm justify-content-center flex-wrap mb-0">
+                                <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+                                    <a class="page-link" href="{{ url_for('buscador_global', search_cedula=cedula_consultada, cols=columnas_seleccionadas, ubicaciones_esp=ubicaciones_seleccionadas, page=page-1) }}">« Anterior</a>
+                                </li>
+                                {% for p in rango_paginas %}
+                                    {% if p == '...' %}
+                                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                                    {% else %}
+                                        <li class="page-item {% if p == page %}active{% endif %}">
+                                            <a class="page-link" href="{{ url_for('buscador_global', search_cedula=cedula_consultada, cols=columnas_seleccionadas, ubicaciones_esp=ubicaciones_seleccionadas, page=p) }}">{{ p }}</a>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+                                <li class="page-item {% if page >= total_paginas %}disabled{% endif %}">
+                                    <a class="page-link" href="{{ url_for('buscador_global', search_cedula=cedula_consultada, cols=columnas_seleccionadas, ubicaciones_esp=ubicaciones_seleccionadas, page=page+1) }}">Siguiente »</a>
+                                </li>
+                            </ul>
+                        </nav>
+                        {% endif %}
+
+                        <div class="alert alert-info mt-3 py-2 d-flex justify-content-between align-items-center" style="font-size: 12px;">
+                            <span>💡 Mostrando página <strong>{{ page }}</strong> de <strong>{{ total_paginas }}</strong> (Total de registros encontrados: <strong>{{ total_resultados }}</strong> — Máx. 20 por página).</span>
+                            <span>Refine la cédula arriba si desea una consulta más específica.</span>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning text-center">
+                            No se encontraron registros en los archivos del sistema para los parámetros especificados.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+    <script>
+        function marcarTodas(estado) {
+            const checkboxes = document.querySelectorAll('.chk-col');
+            checkboxes.forEach(chk => chk.checked = estado);
+        }
+
+        document.getElementById('formBuscador').addEventListener('submit', function(e) {
+            const checkboxes = document.querySelectorAll('.chk-col');
+            const algunaMarcada = Array.from(checkboxes).some(chk => chk.checked);
+            if (!algunaMarcada) {
+                checkboxes.forEach(chk => chk.checked = true);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Módulo de Vacaciones - HUMNT</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='estilos.css') }}">
+    <style>
+        body { margin: 0; padding: 0; }
+        /* Estilo unificado y elegante para tarjetas institucionales */
+        .card {
+            border: 1px solid #b0c4de !important;
+            border-radius: 4px !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
+        }
+        .card-header {
+            background-color: #1b365d !important;
+            color: #ffffff !important;
+            font-weight: bold;
+            border-bottom: 1px solid #b0c4de !important;
+            padding: 10px 15px;
+        }
+        .badge-pendiente { background-color: #ffc107; color: #000; padding: 4px 8px; font-weight: bold; font-size: 12px; border-radius: 2px; }
+        .badge-aprobado { background-color: #198754; color: #fff; padding: 4px 8px; font-weight: bold; font-size: 12px; border-radius: 2px; }
+        .badge-rechazado { background-color: #dc3545; color: #fff; padding: 4px 8px; font-weight: bold; font-size: 12px; border-radius: 2px; }
+    </style>
+</head>
+<body>
+    <!-- 1. CABECERA INSTITUCIONAL UNIFICADA CON ESTILOS EN LÍNEA -->
+    <header style="background: #ffffff !important; border-bottom: 2px solid #b0c4de !important; display: flex !important; justify-content: space-between !important; align-items: center !important; padding: 8px 25px !important; height: 70px !important; box-sizing: border-box !important; width: 100% !important; margin: 0 !important;">
+        <img src="{{ url_for('static', filename='logo_salud.png') }}" style="height: 45px !important; max-height: 45px !important; width: auto !important; object-fit: contain !important;" onerror="this.src='{{ url_for('static', filename='img/logo_salud.png') }}'">
+        <div style="text-align: center;">
+            <div style="font-family: Arial, sans-serif !important; font-size: 13px !important; line-height: 1.3 !important; color: #1b365d !important; font-weight: bold !important;">REPÚBLICA BOLIVARIANA DE VENEZUELA</div>
+            <div style="font-family: Arial, sans-serif !important; font-size: 13px !important; line-height: 1.3 !important; color: #1b365d !important; font-weight: bold !important;">MINISTERIO DEL PODER POPULAR PARA LA SALUD</div>
+        </div>
+        <img src="{{ url_for('static', filename='logo_humnt.png') }}" style="height: 45px !important; max-height: 45px !important; width: auto !important; object-fit: contain !important;" onerror="this.src='{{ url_for('static', filename='img/logo_humnt.png') }}'">
+    </header>
+
+    <!-- 2. BARRA DE NAVEGACIÓN UNIFICADA -->
+    <nav style="background-color: #1b365d !important; color: #ffffff !important; display: flex !important; justify-content: space-between !important; align-items: center !important; padding: 10px 25px !important; height: 45px !important; box-sizing: border-box !important; width: 100% !important;">
+        <span style="font-weight: bold; font-size: 14px; font-family: Arial, sans-serif !important; color: #ffffff;">MÓDULO: GESTIÓN DE VACACIONES</span>
+        <div>
+            <a href="{{ url_for('dashboard') }}" class="text-white text-decoration-none fw-bold me-3">← Volver al Panel Principal</a>
+            <a href="{{ url_for('logout') }}" class="text-white text-decoration-none fw-bold">Cerrar Sesión</a>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- BÚSQUEDA POR CÉDULA -->
+        <div class="card mb-4">
+            <div class="card-header">BÚSQUEDA POR CÉDULA - VACACIONES</div>
+            <div class="card-body">
+                <form method="GET" action="{{ url_for('vacaciones') }}" class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">INGRESE N° CÉDULA:</label>
+                        <input type="text" name="cedula" class="form-control" value="{{ cedula_buscada }}" required>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">Buscar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- FORMULARIO DE REGISTRO -->
+        <div class="card mb-4">
+            <div class="card-header">REGISTRAR NUEVO PERÍODO DE VACACIONES</div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('vacaciones') }}">
+                    <input type="hidden" name="cedula" value="{{ cedula_buscada }}">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">NOMBRES Y APELLIDOS:</label>
+                            <input type="text" name="nombres" class="form-control" value="{{ empleado_data.get('NOMBRES Y APELLIDOS', '') if empleado_data else '' }}" required readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">TIPO DE PERSONAL:</label>
+                            <select name="tipo_personal" class="form-select" required>
+                                {% set t_pers = empleado_data.get('TIPO PERSONAL', '') if empleado_data else '' %}
+                                <option value="EMPLEADO" {% if t_pers == 'EMPLEADO' %}selected{% endif %}>EMPLEADO</option>
+                                <option value="OBRERO" {% if t_pers == 'OBRERO' %}selected{% endif %}>OBRERO</option>
+                                <option value="CONTRATADO" {% if t_pers == 'CONTRATADO' %}selected{% endif %}>CONTRATADO</option>
+                                <option value="MÉDICO" {% if 'MEDICO' in t_pers or 'MÉDICO' in t_pers %}selected{% endif %}>MÉDICO</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">CARGO:</label>
+                            <input type="text" name="cargo" class="form-control" value="{{ empleado_data.get('CARGO', '') if empleado_data else '' }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">GRADO:</label>
+                            <select name="grado" class="form-select">
+                                <option value="Sin Grado">Sin Grado</option>
+                                <option value="Grado I">Grado I</option>
+                                <option value="Grado II">Grado II</option>
+                                <option value="Grado III">Grado III</option>
+                                <option value="Grado IV">Grado IV</option>
+                                <option value="Grado V">Grado V</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">DEPENDENCIA:</label>
+                            <input type="text" name="dependencia" class="form-control" value="{{ empleado_data.get('DEPENDENCIA', '') if empleado_data else '' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">UBICACIÓN NOMINAL:</label>
+                            <input type="text" name="ubicacion_nominal" class="form-control" value="{{ empleado_data.get('UBICACIÓN NOMINAL', '') if empleado_data else '' }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">AÑO DE INGRESO:</label>
+                            <input type="date" name="anio_ingreso" class="form-control" value="{{ empleado_data.get('AÑO DE INGRESO', '') if empleado_data else '' }}" required>
+                        </div>
+                        
+                        <!-- SELECCIÓN DE PERÍODOS (CHECKBOXES) -->
+                        <div class="col-12">
+                            <label class="form-label">PERÍODO DE VACACIÓN:</label>
+                            <div class="border p-2 bg-white" style="max-height: 120px; overflow-y: auto;">
+                                <div class="d-flex flex-wrap gap-3">
+                                    {% for anio in range(1970, 2040) %}
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="periodos" value="{{ anio }}" id="per_{{ anio }}">
+                                        <label class="form-check-label" for="per_{{ anio }}">{{ anio }}</label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">DÍAS DE DISFRUTE (Cálculo Oficial):</label>
+                            <input type="text" name="dias" class="form-control bg-light" readonly>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">DESDE:</label>
+                            <input type="date" name="desde" class="form-control" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">HASTA (Automático):</label>
+                            <input type="date" name="hasta" class="form-control bg-light" readonly>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">TELÉFONO:</label>
+                            <input type="text" name="telefono" class="form-control" value="{{ empleado_data.get('TELÉFONO', '') if empleado_data else '' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">OBSERVACIONES:</label>
+                            <input type="text" name="observaciones" class="form-control">
+                        </div>
+
+                        <div class="col-12 text-end mt-3">
+                            <button type="submit" class="btn btn-success">Enviar Solicitud de Vacaciones</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- HISTORIAL REGISTRADO DE VACACIONES -->
+        {% if historial %}
+        <div class="card mb-4">
+            <div class="card-header">Historial Registrado de Vacaciones</div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Cédula</th>
+                                <th>Nombres y Apellidos</th>
+                                <th>Cargo</th>
+                                <th>Ubicación Nominal</th>
+                                <th>Período</th>
+                                <th>Días</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for h in historial %}
+                            <tr>
+                                <td>{{ h.get('Cédula', '') }}</td>
+                                <td>{{ h.get('NOMBRES Y APELLIDOS', h.get('Nombres', '')) }}</td>
+                                <td>{{ h.get('CARGO', h.get('Cargo', '')) }}</td>
+                                <td>{{ h.get('UBICACIÓN NOMINAL', h.get('Ubicación Nominal', '')) }}</td>
+                                <td>{{ h.get('PERÍODO', h.get('periodos', '')) }}</td>
+                                <td>{{ h.get('DIAS', h.get('Días', '')) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- ========================================== -->
+        <!-- SECCIÓN 1: SOLICITUDES PENDIENTES -->
+        <!-- ========================================== -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Solicitudes Pendientes de Validación</span>
+                <span class="badge bg-warning text-dark">{{ solicitudes_pendientes | length }}</span>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive-vertical">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Usuario</th>
+                                <th>Cédula</th>
+                                <th>Nombres</th>
+                                <th>Período / Días Asignados</th>
+                                <th>Estado</th>
+                                {% if role == 'admin' %}<th>Acciones</th>{% endif %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in solicitudes_pendientes %}
+                            <tr>
+                                <td>{{ s.fecha_registro }}</td>
+                                <td>{{ s.usuario }}</td>
+                                <td>{{ s.cedula }}</td>
+                                <td>{{ s.nombres }}</td>
+                                <td>
+                                    Período: {{ s.periodos }} <br>
+                                    <strong>{{ s.dias }} días</strong> (Del {{ s.desde }} al {{ s.hasta }})
+                                </td>
+                                <td><span class="badge-pendiente">PENDIENTE</span></td>
+                                {% if role == 'admin' %}
+                                <td>
+                                    <form method="POST" action="/admin/procesar_solicitud/{{ s.id }}/aprobar" style="display:inline;">
+                                        <button class="btn btn-success btn-sm" style="font-size:12px;">Aprobar</button>
+                                    </form>
+                                    <form method="POST" action="/admin/procesar_solicitud/{{ s.id }}/rechazar" style="display:inline;">
+                                        <button class="btn btn-danger btn-sm" style="font-size:12px;">Rechazar</button>
+                                    </form>
+                                </td>
+                                {% endif %}
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="{{ '7' if role == 'admin' else '6' }}" class="text-center text-muted">No hay solicitudes pendientes por procesar.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- SECCIÓN 2: SOLICITUDES APROBADAS -->
+        <!-- ========================================== -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Historial de Solicitudes Aprobadas</span>
+                <span class="badge bg-success">{{ solicitudes_aprobadas | length }}</span>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive-vertical">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Usuario</th>
+                                <th>Cédula</th>
+                                <th>Nombres</th>
+                                <th>Período / Días Asignados</th>
+                                <th>Estado</th>
+                                {% if role == 'admin' %}<th>Acciones</th>{% endif %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in solicitudes_aprobadas %}
+                            <tr>
+                                <td>{{ s.fecha_registro }}</td>
+                                <td>{{ s.usuario }}</td>
+                                <td>{{ s.cedula }}</td>
+                                <td>{{ s.nombres }}</td>
+                                <td>
+                                    Período: {{ s.periodos }} <br>
+                                    <strong>{{ s.dias }} días</strong> (Del {{ s.desde }} al {{ s.hasta }})
+                                </td>
+                                <td><span class="badge-aprobado">APROBADO</span></td>
+                                {% if role == 'admin' %}
+                                <td><em>Procesado</em></td>
+                                {% endif %}
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="{{ '7' if role == 'admin' else '6' }}" class="text-center text-muted">No hay solicitudes aprobadas registradas.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- SECCIÓN 3: SOLICITUDES RECHAZADAS -->
+        <!-- ========================================== -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Historial de Solicitudes Rechazadas</span>
+                <span class="badge bg-danger">{{ solicitudes_rechazadas | length }}</span>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive-vertical">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Usuario</th>
+                                <th>Cédula</th>
+                                <th>Nombres</th>
+                                <th>Período / Días Asignados</th>
+                                <th>Estado</th>
+                                {% if role == 'admin' %}<th>Acciones</th>{% endif %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in solicitudes_rechazadas %}
+                            <tr>
+                                <td>{{ s.fecha_registro }}</td>
+                                <td>{{ s.usuario }}</td>
+                                <td>{{ s.cedula }}</td>
+                                <td>{{ s.nombres }}</td>
+                                <td>
+                                    Período: {{ s.periodos }} <br>
+                                    <strong>{{ s.dias }} días</strong> (Del {{ s.desde }} al {{ s.hasta }})
+                                </td>
+                                <td><span class="badge-rechazado">RECHAZADO</span></td>
+                                {% if role == 'admin' %}
+                                <td><em>Procesado</em></td>
+                                {% endif %}
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="{{ '7' if role == 'admin' else '6' }}" class="text-center text-muted">No hay solicitudes rechazadas.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const desdeInput = document.querySelector('input[name="desde"]');
+            const hastaInput = document.querySelector('input[name="hasta"]');
+            const diasInput = document.querySelector('input[name="dias"]');
+            const anioIngresoInput = document.querySelector('input[name="anio_ingreso"]');
+            const tipoPersonalSelect = document.querySelector('select[name="tipo_personal"]');
+            const gradoSelect = document.querySelector('select[name="grado"]');
+            const periodosCheckboxes = document.querySelectorAll('input[name="periodos"]');
+
+            const periodosYaConsumidos = {{ periodos_consumidos | default([]) | tojson }};
+
+            if (desdeInput) {
+                const hoy = new Date().toISOString().split('T')[0];
+                desdeInput.min = hoy;
+            }
+
+            function calcularDiasOficialesFrontend() {
+                if (!anioIngresoInput || !anioIngresoInput.value) return 0;
+
+                let anioStr = anioIngresoInput.value.trim().split('-')[0];
+                let anioIng = parseInt(anioStr, 10);
+                if (isNaN(anioIng)) return 0;
+
+                let tipo = tipoPersonalSelect ? tipoPersonalSelect.value.toUpperCase() : 'EMPLEADO';
+
+                let periodosSeleccionados = [];
+                periodosCheckboxes.forEach(function(cb) {
+                    if (cb.checked && !cb.disabled) {
+                        periodosSeleccionados.push(parseInt(cb.value, 10));
+                    }
+                });
+
+                if (periodosSeleccionados.length === 0) return 0;
+
+                let totalDiasAcumulados = 0;
+
+                periodosSeleccionados.forEach(function(anioPeriodo) {
+                    let anosServicio = Math.max(1, (anioPeriodo - anioIng) + 1);
+                    let diasEstePeriodo = 18;
+
+                    if (tipo.includes('MEDICO') || tipo.includes('MÉDICO')) {
+                        if (anosServicio >= 1 && anosServicio <= 3) diasEstePeriodo = 18;
+                        else if (anosServicio >= 4 && anosServicio <= 5) diasEstePeriodo = 20;
+                        else if (anosServicio >= 6 && anosServicio <= 7) diasEstePeriodo = 22;
+                        else if (anosServicio >= 8 && anosServicio <= 9) diasEstePeriodo = 24;
+                        else if (anosServicio >= 10 && anosServicio <= 11) diasEstePeriodo = 26;
+                        else if (anosServicio >= 12 && anosServicio <= 13) diasEstePeriodo = 28;
+                        else if (anosServicio >= 14 && anosServicio <= 15) diasEstePeriodo = 31;
+                        else if (anosServicio >= 16 && anosServicio <= 17) diasEstePeriodo = 34;
+                        else if (anosServicio >= 18 && anosServicio <= 19) diasEstePeriodo = 37;
+                        else if (anosServicio >= 20 && anosServicio <= 21) diasEstePeriodo = 40;
+                        else if (anosServicio >= 22 && anosServicio <= 23) diasEstePeriodo = 43;
+                        else diasEstePeriodo = 46;
+                    } else {
+                        if (anosServicio >= 16) {
+                            diasEstePeriodo = 30;
+                        } else {
+                            const tablaGen = {
+                                1: { 'EMPLEADO': 18, 'OBRERO': 20, 'CONTRATADO': 15 },
+                                2: { 'EMPLEADO': 18, 'OBRERO': 20, 'CONTRATADO': 16 },
+                                3: { 'EMPLEADO': 18, 'OBRERO': 20, 'CONTRATADO': 17 },
+                                4: { 'EMPLEADO': 18, 'OBRERO': 20, 'CONTRATADO': 18 },
+                                5: { 'EMPLEADO': 19, 'OBRERO': 20, 'CONTRATADO': 19 },
+                                6: { 'EMPLEADO': 21, 'OBRERO': 22, 'CONTRATADO': 20 },
+                                7: { 'EMPLEADO': 21, 'OBRERO': 22, 'CONTRATADO': 21 },
+                                8: { 'EMPLEADO': 22, 'OBRERO': 22, 'CONTRATADO': 22 },
+                                9: { 'EMPLEADO': 23, 'OBRERO': 23, 'CONTRATADO': 23 },
+                                10: { 'EMPLEADO': 24, 'OBRERO': 24, 'CONTRATADO': 24 },
+                                11: { 'EMPLEADO': 25, 'OBRERO': 25, 'CONTRATADO': 25 },
+                                12: { 'EMPLEADO': 26, 'OBRERO': 26, 'CONTRATADO': 26 },
+                                13: { 'EMPLEADO': 27, 'OBRERO': 27, 'CONTRATADO': 27 },
+                                14: { 'EMPLEADO': 28, 'OBRERO': 28, 'CONTRATADO': 28 },
+                                15: { 'EMPLEADO': 29, 'OBRERO': 29, 'CONTRATADO': 29 }
+                            };
+                            let tipoKey = 'EMPLEADO';
+                            if (tipo.includes('OBRERO')) tipoKey = 'OBRERO';
+                            if (tipo.includes('CONTRATADO')) tipoKey = 'CONTRATADO';
+                            diasEstePeriodo = tablaGen[anosServicio] ? (tablaGen[anosServicio][tipoKey] || 18) : 30;
+                        }
+                    }
+                    totalDiasAcumulados += diasEstePeriodo;
+                });
+                return totalDiasAcumulados;
+            }
+
+            function actualizarCalculosVacacionales() {
+                let diasOficiales = calcularDiasOficialesFrontend();
+                if (diasInput) diasInput.value = diasOficiales;
+
+                if (desdeInput && desdeInput.value && diasInput) {
+                    let partes = desdeInput.value.split('-');
+                    let fechaActual = new Date(parseInt(partes[0], 10), parseInt(partes[1], 10) - 1, parseInt(partes[2], 10));
+                    let diasTotales = parseInt(diasInput.value, 10);
+                    if (isNaN(diasTotales) || diasTotales <= 0) return;
+
+                    let diasContados = 0;
+                    let dowIni = fechaActual.getDay();
+                    if (dowIni !== 0 && dowIni !== 6) diasContados = 1;
+
+                    while (diasContados < diasTotales) {
+                        fechaActual.setDate(fechaActual.getDate() + 1);
+                        let dow = fechaActual.getDay();
+                        if (dow !== 0 && dow !== 6) diasContados++;
+                    }
+
+                    let anio = fechaActual.getFullYear();
+                    let mes = String(fechaActual.getMonth() + 1).padStart(2, '0');
+                    let dia = String(fechaActual.getDate()).padStart(2, '0');
+                    if (hastaInput) hastaInput.value = `${anio}-${mes}-${dia}`;
+                }
+            }
+
+            function actualizarCheckboxesPeriodos() {
+                if (!anioIngresoInput || !anioIngresoInput.value) return;
+                let anioIngresoStr = anioIngresoInput.value.trim().split('-')[0];
+                let anioIngreso = parseInt(anioIngresoStr, 10);
+                let anioActual = new Date().getFullYear();
+                if (isNaN(anioIngreso)) return;
+
+                periodosCheckboxes.forEach(function(checkbox) {
+                    let anioCheckbox = parseInt(checkbox.value, 10);
+                    let labelContenedor = checkbox.closest('label') || checkbox.parentElement;
+
+                    if (anioCheckbox < anioIngreso || anioCheckbox > anioActual || periodosYaConsumidos.includes(anioCheckbox)) {
+                        checkbox.disabled = true;
+                        checkbox.checked = false;
+                        if (labelContenedor) {
+                            labelContenedor.style.opacity = '0.3';
+                            labelContenedor.style.textDecoration = 'line-through';
+                        }
+                    } else {
+                        checkbox.disabled = false;
+                        if (labelContenedor) {
+                            labelContenedor.style.opacity = '1';
+                            labelContenedor.style.textDecoration = 'none';
+                        }
+                    }
+                });
+                actualizarCalculosVacacionales();
+            }
+
+            if (tipoPersonalSelect) tipoPersonalSelect.addEventListener('change', actualizarCalculosVacacionales);
+            if (gradoSelect) gradoSelect.addEventListener('change', actualizarCalculosVacacionales);
+            if (anioIngresoInput) {
+                anioIngresoInput.addEventListener('input', actualizarCheckboxesPeriodos);
+                anioIngresoInput.addEventListener('change', actualizarCheckboxesPeriodos);
+            }
+            periodosCheckboxes.forEach(function(checkbox) {
+                checkbox.addEventListener('change', actualizarCalculosVacacionales);
+            });
+
+            if (desdeInput) {
+                desdeInput.addEventListener('change', function() {
+                    if (!this.value) return;
+                    let partes = this.value.split('-');
+                    let fechaSel = new Date(parseInt(partes[0], 10), parseInt(partes[1], 10) - 1, parseInt(partes[2], 10));
+                    let hoyDate = new Date();
+                    hoyDate.setHours(0,0,0,0);
+
+                    if (fechaSel < hoyDate) {
+                        alert("⚠️ Error: No se pueden programar vacaciones en fechas pasadas.");
+                        this.value = "";
+                        if (hastaInput) hastaInput.value = "";
+                        return;
+                    }
+                    let dow = fechaSel.getDay();
+                    if (dow === 0 || dow === 6) {
+                        alert("⚠️ Atención: Las vacaciones no pueden iniciar un fin de semana (Sábado o Domingo).");
+                        this.value = "";
+                        if (hastaInput) hastaInput.value = "";
+                        return;
+                    }
+                    actualizarCalculosVacacionales();
+                });
+            }
+
+            actualizarCheckboxesPeriodos();
+            setTimeout(actualizarCheckboxesPeriodos, 300);
+        });
+    </script>
+</body>
+</html>

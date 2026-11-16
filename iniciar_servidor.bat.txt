@@ -1,0 +1,11 @@
+@echo off
+title Servidor de Pasantia - HUMNT
+:: Cambia automáticamente al directorio donde se encuentra este archivo .bat
+cd /d %~dp0
+
+:: Mensaje de estado en la terminal
+echo Iniciando el sistema de archivos del HUMNT...
+echo Por favor, no cierre esta ventana mientras el equipo este operativo.
+
+:: Ejecuta la aplicacion Flask
+python app.py

@@ -1,0 +1,16 @@
+{
+    "users": {
+        "admin": {
+            "password": "12345678",
+            "role": "admin"
+        },
+        "licmaria": {
+            "password": "12345678",
+            "role": "operator"
+        },
+        "Monica": {
+            "password": "Monica26",
+            "role": "operator"
+        }
+    }
+}

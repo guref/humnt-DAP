@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Módulo Jubilados y Fallecidos - Sistema HUMNT</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f8f9fa; color: #333; font-size: 12px; margin: 0; padding: 0; }
+        .main-container { padding: 20px; max-width: 1400px; margin: 0 auto; }
+        .card { background: #fff; border: 1px solid #d1d5db; border-radius: 4px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .card-header { padding: 10px 15px; font-weight: bold; background-color: #1b365d; color: white; font-size: 12px; }
+        .card-body { padding: 15px; }
+        .form-label { font-weight: bold; font-size: 12px; color: #212529; }
+        .form-control { width: 100%; padding: 8px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px; font-family: Arial, sans-serif; }
+        .btn { padding: 8px 15px; font-size: 12px; font-weight: bold; border-radius: 4px; border: none; cursor: pointer; text-decoration: none; }
+        .btn-primary { background-color: #0d6efd; color: white; }
+        .btn-success { background-color: #198754; color: white; }
+        .btn-danger { background-color: #dc3545; color: white; }
+        
+        /* Contenedor con barra de desplazamiento horizontal (slider) */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+        }
+        .table-responsive::-webkit-scrollbar {
+            height: 8px;
+        }
+        .table-responsive::-webkit-scrollbar-thumb {
+            background-color: #1b365d;
+            border-radius: 4px;
+        }
+        .table-responsive::-webkit-scrollbar-track {
+            background-color: #e9ecef;
+        }
+
+        .table {
+            width: 100%;
+            min-width: max-content;
+            border-collapse: collapse;
+            font-size: 12px;
+            font-family: Arial, sans-serif;
+            margin-bottom: 0;
+        }
+        .table th {
+            background-color: #e9ecef;
+            white-space: nowrap;
+            padding: 12px 16px;
+            border: 1px solid #dee2e6;
+            text-align: left;
+            vertical-align: middle;
+        }
+        .table td {
+            white-space: nowrap;
+            padding: 10px 16px;
+            border: 1px solid #dee2e6;
+            text-align: left;
+            vertical-align: middle;
+        }
+        .badge-pendiente { background-color: #ffc107; color: #000; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+        .badge-aprobado { background-color: #198754; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+        .badge-rechazado { background-color: #dc3545; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <!-- 1. CABECERA INSTITUCIONAL UNIFICADA CON ESTILOS EN LÍNEA -->
+    <header style="background: #ffffff !important; border-bottom: 2px solid #b0c4de !important; display: flex !important; justify-content: space-between !important; align-items: center !important; padding: 8px 25px !important; height: 70px !important; box-sizing: border-box !important; width: 100% !important; margin: 0 !important;">
+        <img src="{{ url_for('static', filename='logo_salud.png') }}" style="height: 45px !important; max-height: 45px !important; width: auto !important; object-fit: contain !important;" onerror="this.src='{{ url_for('static', filename='img/logo_salud.png') }}'">
+        <div style="text-align: center;">
+            <div style="font-family: Arial, sans-serif !important; font-size: 13px !important; line-height: 1.3 !important; color: #1b365d !important; font-weight: bold !important;">REPÚBLICA BOLIVARIANA DE VENEZUELA</div>
+            <div style="font-family: Arial, sans-serif !important; font-size: 13px !important; line-height: 1.3 !important; color: #1b365d !important; font-weight: bold !important;">MINISTERIO DEL PODER POPULAR PARA LA SALUD</div>
+        </div>
+        <img src="{{ url_for('static', filename='logo_humnt.png') }}" style="height: 45px !important; max-height: 45px !important; width: auto !important; object-fit: contain !important;" onerror="this.src='{{ url_for('static', filename='img/logo_humnt.png') }}'">
+    </header>
+
+    <!-- 2. BARRA DE NAVEGACIÓN UNIFICADA -->
+    <nav style="background-color: #1b365d !important; color: #ffffff !important; display: flex !important; justify-content: space-between !important; align-items: center !important; padding: 10px 25px !important; height: 45px !important; box-sizing: border-box !important; width: 100% !important;">
+        <span style="font-weight: bold; font-size: 14px; font-family: Arial, sans-serif !important; color: #ffffff;">Módulo: JUBILADOS / FALLECIDOS</span>
+        <div>
+            <a href="{{ url_for('dashboard') }}" class="text-white text-decoration-none fw-bold me-3">← Volver al Panel Principal</a>
+            <a href="{{ url_for('logout') }}" class="text-white text-decoration-none fw-bold">Cerrar Sesión</a>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}{% for cat, msg in messages %}
+                <div class="alert alert-{{ 'success' if cat == 'success' else 'danger' }}" style="font-size:12px;">{{ msg }}</div>
+            {% endfor %}{% endif %}
+        {% endwith %}
+
+        <div class="card">
+            <div class="card-header">BÚSQUEDA POR CÉDULA - JUBILADOS Y FALLECIDOS</div>
+            <div class="card-body">
+                <form method="GET" action="/jubilados_fallecidos" class="row g-2 align-items-center">
+                    <div class="col-md-4">
+                        <label class="form-label">INGRESE N° CÉDULA:</label>
+                        <input type="text" name="cedula" class="form-control" value="{{ cedula_buscada or '' }}" required>
+                    </div>
+                    <div class="col-md-2" style="margin-top: 18px;">
+                        <button type="submit" class="btn btn-primary w-100">Buscar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if cedula_buscada %}
+        <div class="card">
+            <div class="card-header">REGISTRAR DATOS (JUBILADOS / FALLECIDOS)</div>
+            <div class="card-body">
+                <form method="POST" action="/jubilados_fallecidos">
+                    <input type="hidden" name="cedula" value="{{ cedula_buscada }}">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">NOMBRES Y APELLIDOS:</label>
+                            <input type="text" name="nombres" class="form-control" value="{{ empleado_data.get('NOMBRES Y APELLIDOS', '') if empleado_data else '' }}" placeholder="Puede estar incompleto si falta data...">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">CARGO:</label>
+                            <input type="text" name="cargo" class="form-control" value="{{ empleado_data.get('CARGO', '') if empleado_data else '' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">AÑO DE INGRESO:</label>
+                            <input type="text" name="anio_ingreso" class="form-control" value="{{ empleado_data.get('AÑO DE INGRESO', '') if empleado_data else '' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">AÑO DE EGRESO:</label>
+                            <input type="text" name="anio_egreso" class="form-control" value="{{ empleado_data.get('AÑO DE EGRESO', '') if empleado_data else '' }}">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label">UBICACIÓN NOMINAL:</label>
+                            <input type="text" name="ubicacion_nominal" class="form-control" value="{{ empleado_data.get('UBICACIÓN NOMINAL', '') if empleado_data else '' }}">
+                        </div>
+                    </div>
+                    <div class="mt-3 text-end">
+                        <button type="submit" class="btn btn-success">Enviar Solicitud de Registro</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">Historial de Registros (Jubilados / Fallecidos)</div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Cédula</th>
+                                <th>Nombres y Apellidos</th>
+                                <th>Año Ingreso</th>
+                                <th>Año Egreso</th>
+                                <th>Ubicación Nominal</th>
+                                <th>Cargo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for h in historial %}
+                            <tr>
+                                <td>{{ h.get('CÉDULA') }}</td>
+                                <td>{{ h.get('NOMBRES Y APELLIDOS', 'Sin registro') }}</td>
+                                <td>{{ h.get('AÑO DE INGRESO', 'Sin registro') }}</td>
+                                <td>{{ h.get('AÑO DE EGRESO', 'Sin registro') }}</td>
+                                <td>{{ h.get('UBICACIÓN NOMINAL', 'Sin registro') }}</td>
+                                <td>{{ h.get('CARGO', 'Sin registro') }}</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="6" class="text-center">No hay registros previos.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- CUADRO DE SOLICITUDES Y VALIDACIONES -->
+        <div class="card">
+            <div class="card-header" style="background-color: #343a40;">Estado de Solicitudes (Jubilados / Fallecidos)</div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Usuario</th>
+                                <th>Cédula</th>
+                                <th>Nombres</th>
+                                <th>Estado</th>
+                                {% if role == 'admin' %}<th>Acciones</th>{% endif %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in solicitudes %}
+                            <tr>
+                                <td>{{ s.fecha_registro }}</td>
+                                <td>{{ s.usuario }}</td>
+                                <td>{{ s.cedula }}</td>
+                                <td>{{ s.nombres or 'Sin nombre' }}</td>
+                                <td>
+                                    {% if s.estado == 'PENDIENTE' %}<span class="badge-pendiente">PENDIENTE</span>
+                                    {% elif s.estado == 'APROBADO' %}<span class="badge-aprobado">APROBADO</span>
+                                    {% else %}<span class="badge-rechazado">RECHAZADO</span>{% endif %}
+                                </td>
+                                {% if role == 'admin' %}
+                                <td>
+                                    {% if s.estado == 'PENDIENTE' %}
+                                    <form method="POST" action="/admin/procesar_solicitud/{{ s.id }}/aprobar" style="display:inline;">
+                                        <button class="btn btn-success btn-sm" style="font-size:12px;">Aprobar</button>
+                                    </form>
+                                    <form method="POST" action="/admin/procesar_solicitud/{{ s.id }}/rechazar" style="display:inline;">
+                                        <button class="btn btn-danger btn-sm" style="font-size:12px;">Rechazar</button>
+                                    </form>
+                                    {% else %}
+                                    <em>Procesado</em>
+                                    {% endif %}
+                                </td>
+                                {% endif %}
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="6" class="text-center">No hay solicitudes registradas.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,25 @@
+**Frontend (Interfaz de Usuario)**
+
+HTML5 / Jinja2: Estructura de las páginas web y motor de plantillas de Flask para renderizar contenido dinámico e integrar componentes visuales de manera modular.
+
+CSS3 & Bootstrap (v.min): Estilos personalizados basados en la paleta institucional (Azul #1b365d y Blanco) junto con la versión local minimizada de Bootstrap para asegurar un diseño adaptable, limpio y de alto rendimiento.
+
+JavaScript (Vanilla): Lógica del cliente encargada de controlar la interactividad del menú lateral deslizante (slide-out) y las acciones dinámicas de la interfaz.
+
+
+**Backend (Lógica del Servidor)**
+
+Python 3.8.10 (32 bits): Lenguaje de programación principal, seleccionado específicamente por su compatibilidad nativa y estable con arquitecturas de 32 bits y sistemas operativos heredados (Windows 7).
+
+Flask: Microframework web minimalista que gestiona las rutas HTTP, las solicitudes del usuario, el flujo de navegación y la comunicación entre la interfaz y los datos.
+
+ReportLab: Librería especializada en la generación dinámica de documentos PDF a través de código Python. Actúa como el motor de reportes del sistema, permitiendo estructurar plantillas de impresión, definir márgenes, orientaciones de página (como horizontal o vertical) y compilar los datos procesados del Excel en informes formales listos para exportar de manera completamente local y offline.
+
+
+**Capa de Datos y Procesamiento**
+
+Pandas: Motor de procesamiento analítico y manipulación de estructuras de datos, utilizado para leer, filtrar y transformar la información del archivo Excel institucional.
+
+Openpyxl: Biblioteca controladora subyacente que le proporciona a Pandas la capacidad de leer y escribir archivos con formato .xlsx de manera local y sin dependencias externas de Microsoft Office.
+
+Archivo Excel (.xlsx): Sistema de almacenamiento de datos plano (Flat File Database) que centraliza los registros institucionales del sistema de forma completamente offline.
