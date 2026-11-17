@@ -128,18 +128,18 @@
                             <input type="text" name="cargo" class="form-control" value="{{ empleado_data.get('CARGO', '') if empleado_data else '' }}" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">UBICACIÓN NOMINAL:</label>
-                            <input type="text" name="ubicacion_nominal" class="form-control" value="{{ empleado_data.get('UBICACIÓN NOMINAL', '') if empleado_data else '' }}" required>
-                        </div>
+    <label class="form-label">UBICACIÓN NOMINAL:</label>
+    <input type="text" name="ubicacion_nominal" class="form-control" value="{{ empleado_data.get('UBICACIÓN NOMINAL', empleado_data.get('UBICACION NOMINAL', '')) if empleado_data else '' }}" required>
+</div>
                         <div class="col-md-6">
-                            <label class="form-label">AÑO DE INGRESO:</label>
-                            <input type="date" name="anio_ingreso" class="form-control" value="{{ empleado_data.get('AÑO DE INGRESO', '') if empleado_data else '' }}" required>
-                        </div>
+    <label class="form-label">AÑO DE INGRESO:</label>
+    <input type="text" name="anio_ingreso" class="form-control" value="{{ empleado_data.get('AÑO DE INGRESO', empleado_data.get('ANIO DE INGRESO', '')) if empleado_data else '' }}" readonly>
+</div>
                         <div class="col-md-6">
                             <label class="form-label">ESTATUS / DISFRUTE (TIPO DE REPOSO O PERMISO):</label>
                             <select name="estatus_disfrute" class="form-select" required>
                                 <option value="REPOSO">REPOSO MÉDICO</option>
-                                <option value="PERMISO">PERMISO REMUNERADO / NO REMUNERADO</option>
+                                <option value="PERMISO">PERMISO</option>
                                 <option value="PERMISO POR CUIDO">PERMISO POR CUIDO</option>
                                 <option value="CASAMIENTO">CASAMIENTO</option>
                                 <option value="MATERNIDAD">MATERNIDAD</option>

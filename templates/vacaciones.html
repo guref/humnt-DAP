@@ -114,13 +114,13 @@
                             <input type="text" name="dependencia" class="form-control" value="{{ empleado_data.get('DEPENDENCIA', '') if empleado_data else '' }}">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">UBICACIÓN NOMINAL:</label>
-                            <input type="text" name="ubicacion_nominal" class="form-control" value="{{ empleado_data.get('UBICACIÓN NOMINAL', '') if empleado_data else '' }}" required>
-                        </div>
+    <label class="form-label">UBICACIÓN NOMINAL:</label>
+    <input type="text" name="ubicacion_nominal" class="form-control" value="{{ empleado_data.get('UBICACIÓN NOMINAL', empleado_data.get('UBICACION NOMINAL', '')) if empleado_data else '' }}" required>
+</div>
                         <div class="col-md-6">
-                            <label class="form-label">AÑO DE INGRESO:</label>
-                            <input type="date" name="anio_ingreso" class="form-control" value="{{ empleado_data.get('AÑO DE INGRESO', '') if empleado_data else '' }}" required>
-                        </div>
+    <label class="form-label">AÑO DE INGRESO:</label>
+    <input type="text" name="anio_ingreso" class="form-control" value="{{ empleado_data.get('AÑO DE INGRESO', empleado_data.get('ANIO DE INGRESO', '')) if empleado_data else '' }}" readonly>
+</div>
                         
                         <!-- SELECCIÓN DE PERÍODOS (CHECKBOXES) -->
                         <div class="col-12">
@@ -390,7 +390,7 @@
                 let totalDiasAcumulados = 0;
 
                 periodosSeleccionados.forEach(function(anioPeriodo) {
-                    let anosServicio = Math.max(1, (anioPeriodo - anioIng) + 1);
+                    let anosServicio = Math.max(1, anioPeriodo - anioIng);
                     let diasEstePeriodo = 18;
 
                     if (tipo.includes('MEDICO') || tipo.includes('MÉDICO')) {
@@ -467,7 +467,8 @@
 
             function actualizarCheckboxesPeriodos() {
                 if (!anioIngresoInput || !anioIngresoInput.value) return;
-                let anioIngresoStr = anioIngresoInput.value.trim().split('-')[0];
+                let valIng = anioIngresoInput.value.trim();
+                let anioIngresoStr = valIng.includes('/') ? valIng.split('/')[2] : valIng.split('-')[0];
                 let anioIngreso = parseInt(anioIngresoStr, 10);
                 let anioActual = new Date().getFullYear();
                 if (isNaN(anioIngreso)) return;
@@ -476,7 +477,8 @@
                     let anioCheckbox = parseInt(checkbox.value, 10);
                     let labelContenedor = checkbox.closest('label') || checkbox.parentElement;
 
-                    if (anioCheckbox < anioIngreso || anioCheckbox > anioActual || periodosYaConsumidos.includes(anioCheckbox)) {
+                    // CORRECCIÓN: Se usa '<=' para que el año de ingreso (ej. 2024) quede bloqueado y no se tome como período de disfrute
+                    if (anioCheckbox <= anioIngreso || anioCheckbox > anioActual || periodosYaConsumidos.includes(anioCheckbox)) {
                         checkbox.disabled = true;
                         checkbox.checked = false;
                         if (labelContenedor) {

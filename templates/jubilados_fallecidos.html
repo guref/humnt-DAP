@@ -122,17 +122,17 @@
                             <input type="text" name="cargo" class="form-control" value="{{ empleado_data.get('CARGO', '') if empleado_data else '' }}">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">AÑO DE INGRESO:</label>
-                            <input type="text" name="anio_ingreso" class="form-control" value="{{ empleado_data.get('AÑO DE INGRESO', '') if empleado_data else '' }}">
-                        </div>
+    <label class="form-label">AÑO DE INGRESO:</label>
+    <input type="text" name="anio_ingreso" class="form-control" value="{{ empleado_data.get('AÑO DE INGRESO', empleado_data.get('ANIO DE INGRESO', '')) if empleado_data else '' }}" readonly>
+</div>
                         <div class="col-md-6">
                             <label class="form-label">AÑO DE EGRESO:</label>
                             <input type="text" name="anio_egreso" class="form-control" value="{{ empleado_data.get('AÑO DE EGRESO', '') if empleado_data else '' }}">
                         </div>
-                        <div class="col-md-12">
-                            <label class="form-label">UBICACIÓN NOMINAL:</label>
-                            <input type="text" name="ubicacion_nominal" class="form-control" value="{{ empleado_data.get('UBICACIÓN NOMINAL', '') if empleado_data else '' }}">
-                        </div>
+                        <div class="col-md-6">
+    <label class="form-label">UBICACIÓN NOMINAL:</label>
+    <input type="text" name="ubicacion_nominal" class="form-control" value="{{ empleado_data.get('UBICACIÓN NOMINAL', empleado_data.get('UBICACION NOMINAL', '')) if empleado_data else '' }}" required>
+</div>
                     </div>
                     <div class="mt-3 text-end">
                         <button type="submit" class="btn btn-success">Enviar Solicitud de Registro</button>
