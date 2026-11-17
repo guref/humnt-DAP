@@ -152,13 +152,21 @@ def leer_excel_inteligente(ruta_archivo, hoja=0):
         # SANITIZACIÓN UNIVERSAL A TEXTO PLANO (Str)
         # =====================================================================
         for col in df.columns:
-            # Convertimos toda la columna a string de forma segura
-            df[col] = df[col].apply(lambda x: str(x).strip() if pd.notna(x) and str(x).lower() not in ['nan', 'nat', 'none', ''] else 'Sin registro')
+            # 1. Remplazar nulos reales de pandas por texto limpio de forma segura
+            df[col] = df[col].fillna('Sin registro')
             
-            # Limpiamos artefactos comunes de conversión de tipos en Excel/Pandas
-            df[col] = df[col].str.replace(r'\.0$', '', regex=True) # Elimina el .0 en números enteros leídos como floats
-            df[col] = df[col].str.replace(' 00:00:00', '', regex=True) # Limpia la hora por defecto de los Timestamp de fechas
+            # 2. Convertir a string y limpiar espacios en blanco extremos
+            df[col] = df[col].astype(str).str.strip()
+            
+            # 3. Limpiar valores textuales nulos comunes que vengan como strings
             df[col] = df[col].replace(['nan', 'NaT', 'NAT', 'NaN', 'NONE', 'None', ''], 'Sin registro')
+            
+            # 4. Limpiar artefactos de Excel (solo si la columna no requiere decimales estrictos)
+            # Elimina el .0 típico de enteros leídos como float en pandas
+            df[col] = df[col].str.replace(r'\.0$', '', regex=True)
+            
+            # Limpia la hora por defecto de los Timestamps en fechas
+            df[col] = df[col].str.replace(' 00:00:00', '', regex=True)
 
         return df
     except Exception as e:
@@ -773,8 +781,14 @@ def vacaciones():
 
     if cedula:
         res = buscar_en_todos_los_excels(cedula)
-        if res and len(res) > 0:
-            empleado_data = res[0]['filas'][0] if res[0].get('filas') else None
+        # Búsqueda robusta en todos los bloques institucionales
+        for bloque in res:
+            for fila in bloque.get('filas', []):
+                if str(fila.get('CÉDULA', '')).strip() == str(cedula).strip():
+                    empleado_data = fila
+                    break
+            if empleado_data:
+                break
         historial = obtener_historial_modulo('vacaciones.xlsx', cedula)
 
     if request.method == 'POST':
@@ -830,8 +844,13 @@ def reposos_permisos():
 
     if cedula:
         res = buscar_en_todos_los_excels(cedula)
-        if res and len(res) > 0:
-            empleado_data = res[0]['filas'][0] if res[0].get('filas') else None
+        for bloque in res:
+            for fila in bloque.get('filas', []):
+                if str(fila.get('CÉDULA', '')).strip() == str(cedula).strip():
+                    empleado_data = fila
+                    break
+            if empleado_data:
+                break
         historial = obtener_historial_modulo('reposos_permisos.xlsx', cedula)
 
     if request.method == 'POST':
@@ -875,8 +894,13 @@ def jubilados_fallecidos():
 
     if cedula:
         res = buscar_en_todos_los_excels(cedula)
-        if res and len(res) > 0:
-            empleado_data = res[0]['filas'][0] if res[0].get('filas') else None
+        for bloque in res:
+            for fila in bloque.get('filas', []):
+                if str(fila.get('CÉDULA', '')).strip() == str(cedula).strip():
+                    empleado_data = fila
+                    break
+            if empleado_data:
+                break
         historial = obtener_historial_modulo('jubilados_fallecidos.xlsx', cedula)
 
     if request.method == 'POST':
