@@ -465,6 +465,30 @@
                 }
             }
 
+            // ==========================================
+            // FUNCIÓN PREVIA: EXTRAER Y BLOQUEAR AÑOS YA REGISTRADOS EN EL HISTORIAL DOM
+            // ==========================================
+            function obtenerAniosBloqueadosHistorial() {
+                const aniosHistorial = new Set(periodosYaConsumidos.map(Number));
+                
+                // Leer filas de la tabla de historial registrado de vacaciones
+                const filasHistorial = document.querySelectorAll('.card-body table tbody tr');
+                filasHistorial.forEach(function(fila) {
+                    const celdas = fila.querySelectorAll('td');
+                    if (celdas.length >= 5) {
+                        const textoPeriodo = celdas[4].textContent.trim();
+                        // Extraer todos los años de 4 dígitos (ej. 2023-2024 -> 2023, 2024 o 2023)
+                        const coincidencias = textoPeriodo.match(/\b(19|20)\d{2}\b/g);
+                        if (coincidencias) {
+                            coincidencias.forEach(function(anioStr) {
+                                aniosHistorial.add(parseInt(anioStr, 10));
+                            });
+                        }
+                    }
+                });
+                return Array.from(aniosHistorial);
+            }
+
             function actualizarCheckboxesPeriodos() {
                 if (!anioIngresoInput || !anioIngresoInput.value) return;
                 let valIng = anioIngresoInput.value.trim();
@@ -478,7 +502,7 @@
                     let labelContenedor = checkbox.closest('label') || checkbox.parentElement;
 
                     // CORRECCIÓN: Se usa '<=' para que el año de ingreso (ej. 2024) quede bloqueado y no se tome como período de disfrute
-                    if (anioCheckbox <= anioIngreso || anioCheckbox > anioActual || periodosYaConsumidos.includes(anioCheckbox)) {
+                    if (anioCheckbox <= anioIngreso || anioCheckbox > anioActual || (periodosYaConsumidos.includes(anioCheckbox) || obtenerAniosBloqueadosHistorial().includes(anioCheckbox))) {
                         checkbox.disabled = true;
                         checkbox.checked = false;
                         if (labelContenedor) {
