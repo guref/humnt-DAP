@@ -86,13 +86,15 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">TIPO DE PERSONAL:</label>
-                            <select name="tipo_personal" class="form-select" required>
-                                {% set t_pers = empleado_data.get('TIPO PERSONAL', '') if empleado_data else '' %}
-                                <option value="EMPLEADO" {% if t_pers == 'EMPLEADO' %}selected{% endif %}>EMPLEADO</option>
-                                <option value="OBRERO" {% if t_pers == 'OBRERO' %}selected{% endif %}>OBRERO</option>
-                                <option value="CONTRATADO" {% if t_pers == 'CONTRATADO' %}selected{% endif %}>CONTRATADO</option>
-                                <option value="MÉDICO" {% if 'MEDICO' in t_pers or 'MÉDICO' in t_pers %}selected{% endif %}>MÉDICO</option>
-                            </select>
+                            {% set t_pers = empleado_data.get('TIPO PERSONAL', '').upper() if empleado_data else '' %}
+                            {% if 'MEDICO' in t_pers or 'MÉDICO' in t_pers %}
+                                {% set t_pers_val = 'MÉDICO' %}
+                            {% elif t_pers %}
+                                {% set t_pers_val = t_pers %}
+                            {% else %}
+                                {% set t_pers_val = '' %}
+                            {% endif %}
+                            <input type="text" name="tipo_personal" class="form-control bg-light" value="{{ t_pers_val }}" required readonly>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">CARGO:</label>
@@ -107,6 +109,13 @@
                                 <option value="Grado III">Grado III</option>
                                 <option value="Grado IV">Grado IV</option>
                                 <option value="Grado V">Grado V</option>
+                                <option value="Grado VI">Grado VI</option>
+                                <option value="Grado VII">Grado VII</option>
+                                <option value="Grado VIII">Grado VIII</option>
+                                <option value="Grado IX">Grado IX</option>
+                                <option value="Grado X">Grado X</option>
+                                <option value="Grado XI">Grado XI</option>
+                                <option value="Grado XII">Grado XII</option>
                             </select>
                         </div>
                         <div class="col-md-6">
@@ -358,7 +367,7 @@
             const hastaInput = document.querySelector('input[name="hasta"]');
             const diasInput = document.querySelector('input[name="dias"]');
             const anioIngresoInput = document.querySelector('input[name="anio_ingreso"]');
-            const tipoPersonalSelect = document.querySelector('select[name="tipo_personal"]');
+            const tipoPersonalSelect = document.querySelector('[name="tipo_personal"]');
             const gradoSelect = document.querySelector('select[name="grado"]');
             const periodosCheckboxes = document.querySelectorAll('input[name="periodos"]');
 
@@ -372,7 +381,8 @@
             function calcularDiasOficialesFrontend() {
                 if (!anioIngresoInput || !anioIngresoInput.value) return 0;
 
-                let anioStr = anioIngresoInput.value.trim().split('-')[0];
+                let valIng = anioIngresoInput.value.trim();
+                let anioStr = valIng.includes('/') ? valIng.split('/')[2] : valIng.split('-')[0];
                 let anioIng = parseInt(anioStr, 10);
                 if (isNaN(anioIng)) return 0;
 
@@ -466,24 +476,41 @@
             }
 
             // ==========================================
-            // FUNCIÓN PREVIA: EXTRAER Y BLOQUEAR AÑOS YA REGISTRADOS EN EL HISTORIAL DOM
+            // FUNCIÓN MEJORADA: EXPANSIÓN AUTOMÁTICA DE RANGOS (Ej: 2020-2022 -> 2020, 2021, 2022)
             // ==========================================
             function obtenerAniosBloqueadosHistorial() {
                 const aniosHistorial = new Set(periodosYaConsumidos.map(Number));
                 
-                // Leer filas de la tabla de historial registrado de vacaciones
-                const filasHistorial = document.querySelectorAll('.card-body table tbody tr');
-                filasHistorial.forEach(function(fila) {
-                    const celdas = fila.querySelectorAll('td');
-                    if (celdas.length >= 5) {
-                        const textoPeriodo = celdas[4].textContent.trim();
-                        // Extraer todos los años de 4 dígitos (ej. 2023-2024 -> 2023, 2024 o 2023)
-                        const coincidencias = textoPeriodo.match(/\b(19|20)\d{2}\b/g);
-                        if (coincidencias) {
-                            coincidencias.forEach(function(anioStr) {
-                                aniosHistorial.add(parseInt(anioStr, 10));
-                            });
-                        }
+                const tarjetas = document.querySelectorAll('.card');
+                tarjetas.forEach(function(tarjeta) {
+                    const header = tarjeta.querySelector('.card-header');
+                    if (header && header.textContent.toUpperCase().includes('HISTORIAL REGISTRADO DE VACACIONES')) {
+                        const filas = tarjeta.querySelectorAll('tbody tr');
+                        filas.forEach(function(fila) {
+                            const celdas = fila.querySelectorAll('td');
+                            if (celdas.length >= 5) {
+                                const textoPeriodo = celdas[4].textContent.replace(/\s+/g, ' ').trim();
+                                
+                                // 1. Detectar si hay un rango con guion (ej. 2020-2022 o 2000 - 2003)
+                                const matchRango = textoPeriodo.match(/(\b(?:19|20)\d{2}\b)\s*-\s*(\b(?:19|20)\d{2}\b)/);
+                                if (matchRango) {
+                                    let anioInicio = parseInt(matchRango[1], 10);
+                                    let anioFin = parseInt(matchRango[2], 10);
+                                    // Expandir todos los años incluidos en el rango
+                                    for (let y = anioInicio; y <= anioFin; y++) {
+                                        aniosHistorial.add(y);
+                                    }
+                                } else {
+                                    // 2. Si es un año individual o formato simple, capturar los años sueltos
+                                    const coincidencias = textoPeriodo.match(/\b(19|20)\d{2}\b/g);
+                                    if (coincidencias) {
+                                        coincidencias.forEach(function(anioStr) {
+                                            aniosHistorial.add(parseInt(anioStr, 10));
+                                        });
+                                    }
+                                }
+                            }
+                        });
                     }
                 });
                 return Array.from(aniosHistorial);
@@ -526,8 +553,43 @@
                 anioIngresoInput.addEventListener('input', actualizarCheckboxesPeriodos);
                 anioIngresoInput.addEventListener('change', actualizarCheckboxesPeriodos);
             }
+            // ==========================================
+            // VALIDACIÓN: ORDEN CRONOLÓGICO ESTRICTO SIN SALTOS Y MÁXIMO 10 PERÍODOS
+            // ==========================================
+            function validarSeleccionOrdenadaPeriodos(event) {
+                const checkboxActual = event.target;
+
+                const disponibles = Array.from(periodosCheckboxes)
+                    .filter(cb => !cb.disabled)
+                    .sort((a, b) => parseInt(a.value, 10) - parseInt(b.value, 10));
+
+                const seleccionados = disponibles.filter(cb => cb.checked);
+
+                if (seleccionados.length > 10) {
+                    checkboxActual.checked = false;
+                    alert("⚠️ Selección no permitida: Solo puede elegir un máximo de 10 períodos vacacionales por solicitud.");
+                    actualizarCalculosVacacionales();
+                    return;
+                }
+
+                for (let i = 0; i < disponibles.length; i++) {
+                    if (disponibles[i].checked) {
+                        for (let j = 0; j < i; j++) {
+                            if (!disponibles[j].checked) {
+                                checkboxActual.checked = false;
+                                alert("⚠️ Selección no permitida: Debe seleccionar los períodos vacacionales en estricto orden cronológico desde el primer período disponible (" + disponibles[0].value + "), sin saltarse años.");
+                                actualizarCalculosVacacionales();
+                                return;
+                            }
+                        }
+                    }
+                }
+
+                actualizarCalculosVacacionales();
+            }
+
             periodosCheckboxes.forEach(function(checkbox) {
-                checkbox.addEventListener('change', actualizarCalculosVacacionales);
+                checkbox.addEventListener('change', validarSeleccionOrdenadaPeriodos);
             });
 
             if (desdeInput) {
