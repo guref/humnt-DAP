@@ -796,7 +796,18 @@ def vacaciones():
         grado_val = request.form.get('grado', '').strip()
         anio_ing = request.form.get('anio_ingreso', '').strip()
         lista_per = request.form.getlist('periodos')
-        
+
+        cedula_post = request.form.get('cedula', '').strip()
+        if not cedula_post.isdigit():
+            flash('La cédula debe contener únicamente números.', 'danger')
+            return redirect(url_for('vacaciones', cedula=cedula_post))
+
+        if anio_ing:
+            val_ing_check = anio_ing.replace('/', '').replace('-', '')
+            if not val_ing_check.isdigit():
+                flash('El año de ingreso tiene un formato no válido.', 'danger')
+                return redirect(url_for('vacaciones', cedula=cedula_post))
+
         dias_calculados_backend = calcular_dias_vacaciones_oficial(tipo_p, grado_val, anio_ing, lista_per)
 
         nueva_sol = {
@@ -854,6 +865,19 @@ def reposos_permisos():
         historial = obtener_historial_modulo('reposos_permisos.xlsx', cedula)
 
     if request.method == 'POST':
+        cedula_post = request.form.get('cedula', '').strip()
+        anio_ing = request.form.get('anio_ingreso', '').strip()
+
+        if not cedula_post.isdigit():
+            flash('La cédula debe contener únicamente números.', 'danger')
+            return redirect(url_for('reposos_permisos', cedula=cedula_post))
+
+        if anio_ing:
+            val_ing_check = anio_ing.replace('/', '').replace('-', '')
+            if not val_ing_check.isdigit():
+                flash('El año de ingreso tiene un formato no válido.', 'danger')
+                return redirect(url_for('reposos_permisos', cedula=cedula_post))
+
         nueva_sol = {
             'id': datetime.now().strftime('%Y%m%d%H%M%S'),
             'modulo': 'REPOSOS_PERMISOS',
@@ -862,7 +886,7 @@ def reposos_permisos():
             'nombres': request.form.get('nombres', '').strip().upper(),
             'cargo': request.form.get('cargo', '').strip().upper(),
             'tipo_personal': request.form.get('tipo_personal', '').strip().upper(),
-            'anio_ingreso': request.form.get('anio_ingreso', '').strip(),
+            'anio_ingreso': anio_ing,
             'ubicacion_nominal': request.form.get('ubicacion_nominal', '').strip().upper(),
             'periodos': ", ".join(request.form.getlist('periodos')),
             'estatus_disfrute': request.form.get('estatus_disfrute', '').strip().upper(),
@@ -904,13 +928,26 @@ def jubilados_fallecidos():
         historial = obtener_historial_modulo('jubilados_fallecidos.xlsx', cedula)
 
     if request.method == 'POST':
+        cedula_post = request.form.get('cedula', '').strip()
+        anio_ing = request.form.get('anio_ingreso', '').strip()
+
+        if not cedula_post.isdigit():
+            flash('La cédula debe contener únicamente números.', 'danger')
+            return redirect(url_for('jubilados_fallecidos', cedula=cedula_post))
+
+        if anio_ing:
+            val_ing_check = anio_ing.replace('/', '').replace('-', '')
+            if not val_ing_check.isdigit():
+                flash('El año de ingreso tiene un formato no válido.', 'danger')
+                return redirect(url_for('jubilados_fallecidos', cedula=cedula_post))
+
         nueva_sol = {
             'id': datetime.now().strftime('%Y%m%d%H%M%S'),
             'modulo': 'JUBILADOS_FALLECIDOS',
             'usuario': session.get('user'),
             'cedula': request.form.get('cedula', '').strip(),
             'nombres': request.form.get('nombres', '').strip().upper(),
-            'anio_ingreso': request.form.get('anio_ingreso', '').strip(),
+            'anio_ingreso': anio_ing,
             'anio_egreso': request.form.get('anio_egreso', '').strip(),
             'ubicacion_nominal': request.form.get('ubicacion_nominal', '').strip().upper(),
             'cargo': request.form.get('cargo', '').strip().upper(),
@@ -1022,6 +1059,10 @@ def buscador_global():
     cedula_consultada = request.args.get('search_cedula', '').strip() or request.args.get('cedula', '').strip()
     columnas_seleccionadas = request.args.getlist('cols')
     ubicaciones_seleccionadas = request.args.getlist('ubicaciones_esp')
+
+    if cedula_consultada and not cedula_consultada.isdigit():
+        flash('La cédula debe contener únicamente números.', 'danger')
+        return redirect(url_for('buscador_global', cols=columnas_seleccionadas, ubicaciones_esp=ubicaciones_seleccionadas))
     
     try:
         page = int(request.args.get('page', 1))
@@ -1035,6 +1076,9 @@ def buscador_global():
         cedula_consultada = request.form.get('search_cedula', '').strip() or request.form.get('cedula', '').strip()
         columnas_seleccionadas = request.form.getlist('cols')
         ubicaciones_seleccionadas = request.form.getlist('ubicaciones_esp')
+        if cedula_consultada and not cedula_consultada.isdigit():
+            flash('La cédula debe contener únicamente números.', 'danger')
+            return redirect(url_for('buscador_global', cols=columnas_seleccionadas, ubicaciones_esp=ubicaciones_seleccionadas))
         registrar_auditoria(usuario_actual, f"Realizó búsqueda en Buscador Global (Cédula: {cedula_consultada if cedula_consultada else 'Masiva general'})")
         return redirect(url_for('buscador_global', search_cedula=cedula_consultada, cols=columnas_seleccionadas, ubicaciones_esp=ubicaciones_seleccionadas, page=1))
 
