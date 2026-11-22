@@ -79,7 +79,7 @@
                 <div class="card-body">
                     <div class="row align-items-center">
                         <div class="col-md-9">
-                            <input type="text" name="search_cedula" class="form-control" placeholder="Ingrese número de cédula (opcional, si se deja vacío traerá todos los registros de las columnas marcadas)..." value="{{ cedula_consultada }}">
+                            <input type="text" name="search_cedula" class="form-control solo-numeros" inputmode="numeric" maxlength="10" placeholder="Ingrese número de cédula (opcional, si se deja vacío traerá todos los registros de las columnas marcadas)..." value="{{ cedula_consultada }}">
                         </div>
                         <div class="col-md-3">
                             <button type="submit" class="btn btn-success w-100 fw-bold">🔍 Ejecutar Búsqueda</button>
@@ -238,6 +238,13 @@
             if (!algunaMarcada) {
                 checkboxes.forEach(chk => chk.checked = true);
             }
+        });
+    </script>
+    <script>
+        document.querySelectorAll('.solo-numeros').forEach(function(el) {
+            el.addEventListener('input', function() {
+                this.value = this.value.replace(/\D+/g, '');
+            });
         });
     </script>
 </body>

@@ -93,7 +93,7 @@
                 <form method="GET" action="{{ url_for('reposos_permisos') }}" class="row g-2 align-items-center">
                     <div class="col-md-4">
                         <label class="form-label">INGRESE N° CÉDULA:</label>
-                        <input type="text" name="cedula" class="form-control" value="{{ cedula_buscada or '' }}" required>
+                        <input type="text" name="cedula" class="form-control solo-numeros" inputmode="numeric" maxlength="10" value="{{ cedula_buscada or '' }}" required>
                     </div>
                     <div class="col-md-2" style="margin-top: 18px;">
                         <button type="submit" class="btn btn-primary w-100">Buscar</button>
@@ -111,30 +111,32 @@
                     <div class="row">
                         <div class="col-md-6">
                             <label class="form-label">NOMBRES Y APELLIDOS:</label>
-                            <input type="text" name="nombres" class="form-control" value="{{ empleado_data.get('NOMBRES Y APELLIDOS', '') if empleado_data else '' }}" required readonly>
+                            <input type="text" name="nombres" class="form-control bg-light" value="{{ empleado_data.get('NOMBRES Y APELLIDOS', '') if empleado_data else '' }}" required readonly>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">TIPO DE PERSONAL:</label>
-                            <select name="tipo_personal" class="form-select" required>
-                                {% set t_pers = empleado_data.get('TIPO PERSONAL', '') if empleado_data else '' %}
-                                <option value="EMPLEADO" {% if t_pers == 'EMPLEADO' %}selected{% endif %}>EMPLEADO</option>
-                                <option value="OBRERO" {% if t_pers == 'OBRERO' %}selected{% endif %}>OBRERO</option>
-                                <option value="CONTRATADO" {% if t_pers == 'CONTRATADO' %}selected{% endif %}>CONTRATADO</option>
-                                <option value="MÉDICO" {% if 'MEDICO' in t_pers or 'MÉDICO' in t_pers %}selected{% endif %}>MÉDICO</option>
-                            </select>
+                            {% set t_pers = empleado_data.get('TIPO PERSONAL', '').upper() if empleado_data else '' %}
+                            {% if 'MEDICO' in t_pers or 'MÉDICO' in t_pers %}
+                                {% set t_pers_val = 'MÉDICO' %}
+                            {% elif t_pers %}
+                                {% set t_pers_val = t_pers %}
+                            {% else %}
+                                {% set t_pers_val = '' %}
+                            {% endif %}
+                            <input type="text" name="tipo_personal" class="form-control bg-light" value="{{ t_pers_val }}" required readonly>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">CARGO:</label>
-                            <input type="text" name="cargo" class="form-control" value="{{ empleado_data.get('CARGO', '') if empleado_data else '' }}" required>
+                            <input type="text" name="cargo" class="form-control bg-light" value="{{ empleado_data.get('CARGO', '') if empleado_data else '' }}" readonly>
                         </div>
                         <div class="col-md-6">
-    <label class="form-label">UBICACIÓN NOMINAL:</label>
-    <input type="text" name="ubicacion_nominal" class="form-control" value="{{ empleado_data.get('UBICACIÓN NOMINAL', empleado_data.get('UBICACION NOMINAL', '')) if empleado_data else '' }}" required>
-</div>
+                            <label class="form-label">UBICACIÓN NOMINAL:</label>
+                            <input type="text" name="ubicacion_nominal" class="form-control bg-light" value="{{ empleado_data.get('UBICACIÓN NOMINAL', empleado_data.get('UBICACION NOMINAL', '')) if empleado_data else '' }}" readonly>
+                        </div>
                         <div class="col-md-6">
-    <label class="form-label">AÑO DE INGRESO:</label>
-    <input type="text" name="anio_ingreso" class="form-control" value="{{ empleado_data.get('AÑO DE INGRESO', empleado_data.get('ANIO DE INGRESO', '')) if empleado_data else '' }}" readonly>
-</div>
+                            <label class="form-label">AÑO DE INGRESO:</label>
+                            <input type="text" name="anio_ingreso" class="form-control bg-light" value="{{ empleado_data.get('AÑO DE INGRESO', empleado_data.get('ANIO DE INGRESO', '')) if empleado_data else '' }}" readonly>
+                        </div>
                         <div class="col-md-6">
                             <label class="form-label">ESTATUS / DISFRUTE (TIPO DE REPOSO O PERMISO):</label>
                             <select name="estatus_disfrute" class="form-select" required>
@@ -296,6 +298,13 @@
 
             if (desdeInput) desdeInput.addEventListener('change', calcularDiasEntreFechas);
             if (hastaInput) hastaInput.addEventListener('change', calcularDiasEntreFechas);
+        });
+    </script>
+    <script>
+        document.querySelectorAll('.solo-numeros').forEach(function(el) {
+            el.addEventListener('input', function() {
+                this.value = this.value.replace(/\D+/g, '');
+            });
         });
     </script>
 </body>
